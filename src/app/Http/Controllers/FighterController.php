@@ -6,13 +6,24 @@ use App\Models\Fighter;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class FighterController extends Controller
+class FighterController extends Controller implements HasMiddleware
 {
-    // display all fighters
+    public static function middleware(): array
+    {
+        /**
+* Get the middleware that should be assigned to the controller.
+*/
+
+        return [
+            new Middleware('auth'),
+        ];
+    }
     public function list(): View
     {
-        $items = Fighter::orderBy('Id', 'asc')->get();
+        $items = Fighter::orderBy('name', 'asc')->get();
 
         return view(
             'fighter.list',
@@ -22,17 +33,18 @@ class FighterController extends Controller
             ]
         );
     }
-    // display new fighter form
+
     public function create(): View
     {
         return view(
             'fighter.form',
             [
                 'title' => 'Add a fighter',
-                "fighter" => new fighter()
+                'fighter' => new Fighter()
             ]
         );
     }
+
     // create new fighter
     public function put(Request $request): RedirectResponse
     {
@@ -40,14 +52,15 @@ class FighterController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $fighter = new fighter();
+        $fighter = new Fighter();
         $fighter->name = $validatedData['name'];
         $fighter->save();
 
         return redirect('/fighters');
     }
+
     // display fighter editing form
-    public function update(fighter $fighter): View
+    public function update(Fighter $fighter): View
     {
         return view(
             'fighter.form',
@@ -57,8 +70,9 @@ class FighterController extends Controller
             ]
         );
     }
+
     // update existing fighter data
-    public function patch(fighter $fighter, Request $request): RedirectResponse
+    public function patch(Fighter $fighter, Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -69,9 +83,10 @@ class FighterController extends Controller
 
         return redirect('/fighters');
     }
-    public function delete(fighter $fighter): RedirectResponse
+
+    // delete fighter
+    public function delete(Fighter $fighter): RedirectResponse
     {
-        // šeit derētu pārbaude, kas neļauj dzēst autoru, ja tas piesaistīts eksistējošām grāmatām
         $fighter->delete();
         return redirect('/fighters');
     }
